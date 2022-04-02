@@ -26,19 +26,12 @@ import static com.toocol.ssh.core.configuration.SystemConfiguration.BOOT_TYPE;
  * @email joezane.cn@gmail.com
  * @date 2021/2/19 15:00
  */
-public class TerminalSystem {
+public class Terminatio {
 
     private static final long BLOCKED_CHECK_INTERVAL = 30 * 24 * 60 * 60 * 1000L;
 
-    public static void main(String[] args) {
-        if (args.length != 1) {
-            Printer.printErr("Wrong boot parameter.");
-            System.exit(-1);
-        }
-
-        BOOT_TYPE = args[0];
-        Printer.printTitle();
-        Printer.printlnWithLogo("TerminalSystem register the vertx service.");
+    public void start(String type) {
+        BOOT_TYPE = type;
 
         Signal.handle(new Signal("INT"), signal -> {});
 
