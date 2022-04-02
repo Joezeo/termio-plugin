@@ -1,4 +1,4 @@
-package com.toocol.ssh.core.command.commands;
+package com.toocol.ssh.core.shell.commands;
 
 import com.toocol.ssh.common.utils.ICastable;
 import io.vertx.core.eventbus.EventBus;

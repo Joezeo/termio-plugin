@@ -8,7 +8,7 @@ import com.toocol.ssh.common.address.IAddress;
 import com.toocol.ssh.common.utils.Printer;
 import com.toocol.ssh.common.utils.SnowflakeGuidGenerator;
 import com.toocol.ssh.core.cache.Cache;
-import com.toocol.ssh.core.credentials.vo.SshCredential;
+import com.toocol.ssh.core.shell.vo.SshCredential;
 import com.toocol.ssh.core.shell.vo.SshUserInfo;
 import com.toocol.ssh.core.cache.SessionCache;
 import io.vertx.core.AsyncResult;
@@ -43,9 +43,7 @@ public class EstablishSessionChannelHandler extends AbstractMessageHandler<Long>
 
     @Override
     protected <T> void handleWithin(Future<Long> future, Message<T> message) throws Exception {
-        int index = cast(message.body());
-        SshCredential credential = Cache.getCredential(index);
-        assert credential != null;
+        SshCredential credential = SshCredential.transFromJson(cast(message.body()));
 
         long sessionId = sessionCache.containSession(credential.getHost());
         if (sessionId == 0) {

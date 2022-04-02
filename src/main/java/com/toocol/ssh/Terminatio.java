@@ -9,8 +9,11 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import org.apache.commons.lang3.StringUtils;
 import sun.misc.Signal;
 
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -18,8 +21,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.toocol.ssh.core.command.CommandVerticleAddress.ADDRESS_ACCEPT_COMMAND;
-import static com.toocol.ssh.core.configuration.SystemConfiguration.BOOT_TYPE;
+import static com.toocol.ssh.core.configuration.SystemConfiguration.*;
 
 /**
  * @author ZhaoZhe
@@ -30,8 +32,15 @@ public class Terminatio {
 
     private static final long BLOCKED_CHECK_INTERVAL = 30 * 24 * 60 * 60 * 1000L;
 
-    public void start(String type) {
+    public void start(String type, InputStream inputStream, PrintStream printStream) {
+        assert StringUtils.isNotEmpty(type) && inputStream != null && printStream != null;
+
+        // TODO: Vert.x system should be fully hidden;
+
         BOOT_TYPE = type;
+        INPUT_STREAM = inputStream;
+        PRINT_STREAM = printStream;
+
 
         Signal.handle(new Signal("INT"), signal -> {});
 
@@ -43,7 +52,7 @@ public class Terminatio {
             if (annotatedClass.getSuperclass().equals(AbstractVerticle.class)) {
                 preloadVerticleClassList.add(CastUtil.cast(annotatedClass));
             } else {
-                Printer.printErr("skip deploy verticle " + annotatedClass.getName() + ", please extends AbstractVerticle");
+                throw new RuntimeException("skip deploy verticle " + annotatedClass.getName() + ", please extends AbstractVerticle");
             }
         });
         final CountDownLatch initialLatch = new CountDownLatch(preloadVerticleClassList.size());
@@ -58,8 +67,8 @@ public class Terminatio {
             Set<Class<?>> finalClassList = ClassUtil.scanPackageByAnnotation("com.toocol.ssh.core", FinalDeployment.class);
             finalClassList.forEach(finalVerticle -> {
                 if (!finalVerticle.getSuperclass().equals(AbstractVerticle.class)) {
-                    Printer.printErr("skip deploy verticle " + finalVerticle.getName() + ", please extends AbstractVerticle");
-                    return;
+                    Printer.println("skip deploy verticle " + finalVerticle.getName() + ", please extends AbstractVerticle");
+                    System.exit(-1);
                 }
                 try {
                     boolean ret = initialLatch.await(30, TimeUnit.SECONDS);
@@ -68,20 +77,12 @@ public class Terminatio {
                     }
                     vertx.deployVerticle(finalVerticle.getName(), complete -> future.complete());
                 } catch (Exception e) {
-                    Printer.printErr("SSH TERMINAL START UP FAILED!!");
+                    Printer.println("Terminatio start up failed.");
                     vertx.close();
                     System.exit(-1);
                 }
             });
-        }, res -> {
-            try {
-                Printer.loading();
-                vertx.eventBus().send(ADDRESS_ACCEPT_COMMAND.address(), true);
-            } catch (Exception e) {
-                Printer.printErr("problem happened.");
-                System.exit(-1);
-            }
-        });
+        }, res -> {});
 
         preloadVerticleClassList.sort(Comparator.comparingInt(clazz -> -1 * clazz.getAnnotation(PreloadDeployment.class).weight()));
         preloadVerticleClassList.forEach(verticleClass ->
@@ -89,7 +90,7 @@ public class Terminatio {
                     if (result.succeeded()) {
                         initialLatch.countDown();
                     } else {
-                        Printer.printErr("Terminal start up failed, verticle = " + verticleClass.getSimpleName());
+                        Printer.println("Terminal start up failed, verticle = " + verticleClass.getSimpleName());
                         vertx.close();
                         System.exit(-1);
                     }

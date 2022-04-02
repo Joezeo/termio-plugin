@@ -1,6 +1,7 @@
 package com.toocol.ssh.common.handler;
 
 import com.toocol.ssh.common.address.IAddress;
+import com.toocol.ssh.common.exception.ExceptionCatcher;
 import com.toocol.ssh.common.utils.ICastable;
 import com.toocol.ssh.common.utils.Printer;
 import io.vertx.core.AsyncResult;
@@ -53,25 +54,33 @@ public abstract class AbstractMessageHandler<R> implements ICastable {
      * @param <T>     generic type
      */
     public <T> void handle(Message<T> message) {
+        ExceptionCatcher blockingCodeCatcher = new ExceptionCatcher();
+        ExceptionCatcher resultingCatcher = new ExceptionCatcher();
+
         executor.executeBlocking(
                 future -> {
                     try {
                         handleWithin(cast(future), message);
                     } catch (Exception e) {
-                        Printer.printErr("\nCaught handle exception, exit program.");
-                        System.exit(-1);
+                        blockingCodeCatcher.catchException(e);
                     }
                 },
                 !parallel,
                 asyncResult -> {
+                    if (blockingCodeCatcher.isCatch()) {
+                        return;
+                    }
+
                     try {
                         resultWithin(cast(asyncResult), message);
                     } catch (Exception e) {
-                        Printer.println("\nCaught handle exception, exit program.");
-                        System.exit(-1);
+                        resultingCatcher.catchException(e);
                     }
                 }
         );
+
+        blockingCodeCatcher.throwOut();
+        resultingCatcher.throwOut();
     }
 
     /**

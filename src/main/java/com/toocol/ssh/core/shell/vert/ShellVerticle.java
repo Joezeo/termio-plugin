@@ -1,10 +1,9 @@
 package com.toocol.ssh.core.shell.vert;
 
 import com.jcraft.jsch.JSch;
-import com.toocol.ssh.common.annotation.FinalDeployment;
+import com.toocol.ssh.common.annotation.PreloadDeployment;
 import com.toocol.ssh.common.annotation.RegisterHandler;
 import com.toocol.ssh.common.handler.IHandlerMounter;
-import com.toocol.ssh.common.utils.Printer;
 import com.toocol.ssh.common.utils.SnowflakeGuidGenerator;
 import com.toocol.ssh.core.cache.SessionCache;
 import com.toocol.ssh.core.shell.handlers.AcceptShellCmdHandler;
@@ -17,7 +16,7 @@ import io.vertx.core.WorkerExecutor;
  * @author ZhaoZhe (joezane.cn@gmail.com)
  * @date 2022/3/31 11:30
  */
-@FinalDeployment
+@PreloadDeployment
 @RegisterHandler(handlers = {
         EstablishSessionChannelHandler.class,
         ExhibitShellHandler.class,
@@ -33,8 +32,6 @@ public class ShellVerticle extends AbstractVerticle implements IHandlerMounter {
         mountHandler(vertx, executor, true, new JSch(), new SnowflakeGuidGenerator(), sessionCache);
 
         Runtime.getRuntime().addShutdownHook(new Thread(sessionCache::stopAll));
-
-        Printer.printlnWithLogo("Success start ssh verticle.");
     }
 
 }

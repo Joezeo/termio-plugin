@@ -6,7 +6,7 @@ import com.toocol.ssh.common.handler.AbstractMessageHandler;
 import com.toocol.ssh.common.utils.Printer;
 import com.toocol.ssh.core.cache.Cache;
 import com.toocol.ssh.core.cache.SessionCache;
-import com.toocol.ssh.core.shell.commands.ShellCommand;
+import com.toocol.ssh.core.shell.commands.AbstractShellCommand;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -20,8 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.toocol.ssh.core.command.CommandVerticleAddress.ADDRESS_ACCEPT_COMMAND;
 import static com.toocol.ssh.core.shell.ShellVerticleAddress.ACCEPT_SHELL_CMD;
+import static com.toocol.ssh.core.terminatio.ShellVerticleAddress.EXIT_SHELL;
 
 /**
  * @author ZhaoZhe (joezane.cn@gmail.com)
@@ -75,7 +75,7 @@ public class AcceptShellCmdHandler extends AbstractMessageHandler<Long> {
             }
 
             AtomicBoolean isBreak = new AtomicBoolean();
-            ShellCommand.cmdOf(cmd.toString()).ifPresent(shellCommand -> {
+            AbstractShellCommand.cmdOf(cmd.toString()).ifPresent(shellCommand -> {
                 try {
                     shellCommand.processCmd(eventBus, future, sessionId, isBreak);
                     cmd.delete(0, cmd.length());
@@ -107,7 +107,7 @@ public class AcceptShellCmdHandler extends AbstractMessageHandler<Long> {
             // hang up the session
             Cache.HANGED_QUIT = true;
         }
-        eventBus.send(ADDRESS_ACCEPT_COMMAND.address(), true);
+        eventBus.send(EXIT_SHELL.address(), true);
     }
 
     @SafeVarargs

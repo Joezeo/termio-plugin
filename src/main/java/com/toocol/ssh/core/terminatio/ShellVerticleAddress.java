@@ -1,4 +1,4 @@
-package com.toocol.ssh.core.credentials;
+package com.toocol.ssh.core.terminatio;
 
 import com.toocol.ssh.common.address.IAddress;
 import lombok.AllArgsConstructor;
@@ -8,11 +8,15 @@ import lombok.AllArgsConstructor;
  * @date 2022/3/31 11:43
  */
 @AllArgsConstructor
-public enum CredentialVerticleAddress implements IAddress{
+public enum ShellVerticleAddress implements IAddress{
     /**
-     * add a ssh credential
+     * start shell
      */
-    ADD_CREDENTIAL("ssh.add.credential");
+    START_SHELL("ssh.establish.session"),
+    /**
+     * exit shell
+     */
+    EXIT_SHELL("ssh.accept.shell.cmd");
 
     /**
      * the address string of message

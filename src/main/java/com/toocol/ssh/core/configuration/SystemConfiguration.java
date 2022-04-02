@@ -1,5 +1,7 @@
 package com.toocol.ssh.core.configuration;
 
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Optional;
 
 /**
@@ -9,10 +11,15 @@ import java.util.Optional;
  */
 public class SystemConfiguration {
 
+    public static final String SHELL_COMMAND_PACKAGE = "the class extends AbstractOutsideCommand's package to scan";
+    public static final String VERTICLE_SCAN_PACKAGE = "the verticle's package to scan";
+
     public static final String BOOT_TYPE_CMD = "cmd";
     public static final String BOOT_TYPE_BASH = "bash";
 
     public static String BOOT_TYPE;
+    public static PrintStream PRINT_STREAM;
+    public static InputStream INPUT_STREAM;
 
     public static Optional<String> getExecuteMode() {
         switch (BOOT_TYPE) {
